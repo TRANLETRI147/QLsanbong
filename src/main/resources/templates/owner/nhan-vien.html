@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Nhân viên')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<main class="container py-3">
+    <div th:replace="~{fragments :: flash}"></div>
+    <h1 class="h4 mb-3">Nhân viên</h1>
+
+    <form th:action="@{/owner/nhan-vien}" method="post" class="card card-body mb-4">
+        <h2 class="h6">Tạo tài khoản nhân viên</h2>
+        <div class="row g-2">
+            <div class="col-12 col-md-3">
+                <label class="form-label small mb-0" for="username">Tên đăng nhập</label>
+                <input type="text" id="username" name="username" class="form-control form-control-sm" pattern="[a-z0-9._]{3,30}"
+                       title="Chữ thường không dấu, số, dấu chấm, gạch dưới (3-30 ký tự)" autocapitalize="none" required>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small mb-0" for="hoTen">Họ tên</label>
+                <input type="text" id="hoTen" name="hoTen" class="form-control form-control-sm" maxlength="100" required>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small mb-0" for="matKhau">Mật khẩu (ít nhất 6 ký tự)</label>
+                <input type="text" id="matKhau" name="matKhau" class="form-control form-control-sm" minlength="6" required autocomplete="off">
+            </div>
+            <div class="col-12 col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-success btn-sm w-100">Tạo</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Tên đăng nhập</th><th>Họ tên</th><th>Vai trò</th><th>Trạng thái</th><th>Đặt lại mật khẩu</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="u : ${ds}">
+                    <td th:text="${u.username}">user</td>
+                    <td th:text="${u.fullName}">Tên</td>
+                    <td><span class="badge" th:classappend="${u.chu} ? 'text-bg-primary' : 'text-bg-secondary'" th:text="${u.role.nhan}">Vai trò</span></td>
+                    <td>
+                        <span class="badge text-bg-success" th:if="${u.enabled}">Đang làm việc</span>
+                        <span class="badge text-bg-danger" th:unless="${u.enabled}">Đã khóa</span>
+                    </td>
+                    <td>
+                        <form th:action="@{/owner/nhan-vien/{id}/mat-khau(id=${u.id})}" method="post" class="m-0 d-flex gap-1"
+                              onsubmit="return confirm('Đặt lại mật khẩu cho tài khoản này?')">
+                            <input type="text" name="matKhauMoi" class="form-control form-control-sm" placeholder="Mật khẩu mới" minlength="6" required autocomplete="off">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm nowrap">Đổi</button>
+                        </form>
+                    </td>
+                    <td class="text-end">
+                        <form th:unless="${u.id == me.id}" th:action="@{/owner/nhan-vien/{id}/trang-thai(id=${u.id})}" method="post" class="m-0">
+                            <input type="hidden" name="enabled" th:value="${!u.enabled}">
+                            <button type="submit" class="btn btn-sm nowrap" th:classappend="${u.enabled} ? 'btn-outline-danger' : 'btn-outline-success'"
+                                    th:text="${u.enabled} ? 'Khóa' : 'Mở khóa'">Khóa</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-muted small mt-2">Nhân viên nghỉ việc thì bấm "Khóa" (không xóa) để lịch sử ghi chú và thu tiền vẫn còn tên.</p>
+</main>
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

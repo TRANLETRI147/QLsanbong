@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Đặt sân')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<main class="container py-3" style="max-width: 640px">
+    <div th:replace="~{fragments :: flash}"></div>
+    <h1 class="h4 mb-3">Đặt sân</h1>
+
+    <div class="alert alert-info py-2 small" th:unless="${laChu}">
+        Booking do nhân viên tạo sẽ ở trạng thái <strong>Chờ duyệt</strong>: vẫn giữ chỗ cho khách,
+        nhưng chủ sân phải duyệt thì mới chính thức.
+    </div>
+    <div class="alert alert-info py-2 small" th:if="${laChu}">
+        Chủ sân tạo booking sẽ được <strong>duyệt luôn</strong>.
+    </div>
+
+    <p class="text-muted" th:if="${#lists.isEmpty(cacSan)}">Chưa có sân nào để đặt. Nhờ chủ sân thêm sân trước.</p>
+
+    <form th:action="@{/booking}" method="post" class="card card-body" th:unless="${#lists.isEmpty(cacSan)}">
+        <div class="mb-3">
+            <label class="form-label" for="sanId">Sân</label>
+            <select class="form-select" id="sanId" name="sanId" required>
+                <option th:each="s : ${cacSan}" th:value="${s.id}" th:attr="data-gia=${s.giaMoiGio}"
+                        th:selected="${s.id == sanId}"
+                        th:text="${s.ten} + ' (' + ${s.loai.nhan} + ') — ' + ${#numbers.formatDecimal(s.giaMoiGio, 1, 'POINT', 0, 'COMMA')} + 'đ/giờ'">Sân</option>
+            </select>
+            <div class="form-text">Đặt sân 7 sẽ khóa cả 3 sân 5 cùng cụm, và đặt 1 sân 5 sẽ khóa sân 7 chứa nó.</div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-sm-4">
+                <label class="form-label" for="ngay">Ngày</label>
+                <input type="date" class="form-control" id="ngay" name="ngay" th:value="${ngay}" required>
+            </div>
+            <div class="col-6 col-sm-4">
+                <label class="form-label" for="batDau">Từ</label>
+                <select class="form-select" id="batDau" name="batDau" required>
+                    <option th:each="g : ${mocBatDau}" th:value="${g}" th:text="${g}" th:selected="${g == batDau}">18:00</option>
+                </select>
+            </div>
+            <div class="col-6 col-sm-4">
+                <label class="form-label" for="ketThuc">Đến</label>
+                <select class="form-select" id="ketThuc" name="ketThuc" required>
+                    <option th:each="g : ${mocKetThuc}" th:value="${g}" th:text="${g}" th:selected="${g == ketThuc}">19:00</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">Tạm tính tiền sân: <span id="tamTinh" class="fw-bold">—</span></div>
+
+        <div class="mb-3">
+            <label class="form-label" for="tenKhach">Tên khách</label>
+            <input type="text" class="form-control" id="tenKhach" name="tenKhach" maxlength="100" th:value="${tenKhach}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="sdtKhach">Số điện thoại</label>
+            <input type="tel" class="form-control" id="sdtKhach" name="sdtKhach" maxlength="20" th:value="${sdtKhach}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="ghiChu">Ghi chú yêu cầu của khách (không bắt buộc)</label>
+            <textarea class="form-control" id="ghiChu" name="ghiChu" rows="2" maxlength="1000"
+                      placeholder="Ví dụ: đặt thêm 10 chai nước, đá bù buổi trước..." th:text="${ghiChu}"></textarea>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Tạo booking</button>
+            <a class="btn btn-outline-secondary" th:href="@{/lich(ngay=${ngay})}">Hủy</a>
+        </div>
+    </form>
+</main>
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

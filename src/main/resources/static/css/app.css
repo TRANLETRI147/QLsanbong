@@ -1,0 +1,49 @@
+/* ====== Chung ====== */
+body { background: #f4f6f4; }
+.card { border: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+.stat .so { font-size: 1.6rem; font-weight: 700; }
+.nowrap { white-space: nowrap; }
+
+/* ====== Lưới lịch ====== */
+.lich-wrap { max-height: 78vh; overflow: auto; background: #fff; border-radius: .5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+table.lich { margin: 0; min-width: 640px; table-layout: fixed; }
+table.lich th, table.lich td { vertical-align: top; padding: .15rem .3rem; font-size: .85rem; }
+table.lich thead th { position: sticky; top: 0; z-index: 3; background: #e9f5ec; text-align: center; }
+table.lich th.cot-gio { position: sticky; left: 0; z-index: 2; width: 58px; background: #f8f9fa; text-align: right; font-weight: 400; color: #6c757d; }
+table.lich thead th.cot-gio { z-index: 4; }
+table.lich tr.gio-tron th.cot-gio { font-weight: 700; color: #212529; }
+table.lich tr.gio-tron td, table.lich tr.gio-tron th { border-top: 2px solid #ced4da; }
+.san-7 { background: #d6ecf7 !important; }
+.nho { font-size: .75rem; font-weight: 400; color: #6c757d; }
+
+.o-trong { height: 30px; padding: 0 !important; }
+.o-trong a { display: block; height: 100%; min-height: 28px; text-align: center; color: #b6c2b9; text-decoration: none; }
+.o-trong a:hover { background: #d8f0de; color: #198754; }
+
+.o-booking { display: block; height: 100%; padding: .25rem .35rem; border-radius: .25rem; color: #212529; text-decoration: none; overflow: hidden; line-height: 1.25; }
+.o-booking:hover { filter: brightness(.95); }
+td.st-PENDING_APPROVAL { background: #fff3cd; border-left: 4px solid #ffc107; }
+td.st-CONFIRMED { background: #cfe2ff; border-left: 4px solid #0d6efd; }
+td.st-CHECKED_IN { background: #d1e7dd; border-left: 4px solid #198754; }
+td.st-COMPLETED { background: #e2e3e5; border-left: 4px solid #6c757d; }
+
+/* Ô bị khóa do sân 7 <-> sân 5: vạch chéo xám để nhìn là biết "không đặt được" */
+td.o-khoa {
+    background: repeating-linear-gradient(45deg, #f1f1f1, #f1f1f1 8px, #e2e2e2 8px, #e2e2e2 16px);
+    color: #555; font-size: .75rem; line-height: 1.25; text-align: center;
+}
+
+.chu-thich span { display: inline-block; margin-right: .75rem; font-size: .8rem; }
+.chu-thich i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; border: 1px solid rgba(0, 0, 0, .15); }
+
+/* ====== Đăng nhập ====== */
+.dang-nhap { max-width: 380px; margin: 8vh auto; }
+
+/* ====== Hóa đơn (in) ====== */
+.hoa-don { max-width: 420px; margin: 1rem auto; background: #fff; padding: 1.25rem; border-radius: .5rem; }
+.hoa-don table td, .hoa-don table th { padding: .2rem 0; }
+@media print {
+    body { background: #fff; }
+    .khong-in { display: none !important; }
+    .hoa-don { box-shadow: none; margin: 0; max-width: 100%; }
+}

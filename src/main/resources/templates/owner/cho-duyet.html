@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Chờ duyệt')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<main class="container-fluid py-3">
+    <div th:replace="~{fragments :: flash}"></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h1 class="h4 mb-0">Booking chờ duyệt <span class="badge text-bg-warning" th:text="${#lists.size(ds)}">0</span></h1>
+        <form th:if="${!#lists.isEmpty(ds)}" th:action="@{/owner/cho-duyet/duyet-het}" method="post" class="m-0"
+              onsubmit="return confirm('Duyệt tất cả booking đang chờ?')">
+            <button type="submit" class="btn btn-success">Duyệt tất cả</button>
+        </form>
+    </div>
+
+    <p class="text-muted" th:if="${#lists.isEmpty(ds)}">Không có booking nào đang chờ duyệt.</p>
+
+    <div class="card" th:unless="${#lists.isEmpty(ds)}">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Giờ đá</th><th>Sân</th><th>Khách</th><th class="text-end">Tiền sân</th><th>Người tạo</th><th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${ds}">
+                    <td class="nowrap"><span th:text="${b.ngayText}">01/01/2026</span><br><strong th:text="${b.gioText}">19:00–20:00</strong></td>
+                    <td th:text="${b.sanBong.ten}">Sân</td>
+                    <td>
+                        <a th:href="@{/booking/{id}(id=${b.id})}" th:text="${b.customerName}">Tên</a>
+                        <div class="small text-muted" th:text="${b.customerPhone}"></div>
+                    </td>
+                    <td class="text-end nowrap"><span th:replace="~{fragments :: tien(${b.courtFee})}">0đ</span></td>
+                    <td>
+                        <span th:text="${b.createdBy.fullName}">Nhân viên</span>
+                        <div class="small text-muted" th:text="${#temporals.format(b.createdAt, 'dd/MM HH:mm')}"></div>
+                    </td>
+                    <td style="min-width: 260px">
+                        <div class="d-flex gap-2">
+                            <form th:action="@{/owner/booking/{id}/duyet(id=${b.id})}" method="post" class="m-0">
+                                <button type="submit" class="btn btn-success btn-sm">Duyệt</button>
+                            </form>
+                            <form th:action="@{/owner/booking/{id}/tu-choi(id=${b.id})}" method="post" class="m-0 d-flex gap-1"
+                                  onsubmit="return confirm('Từ chối booking này? Sân sẽ được nhả.')">
+                                <input type="text" name="lyDo" class="form-control form-control-sm" placeholder="Lý do" maxlength="255">
+                                <button type="submit" class="btn btn-outline-danger btn-sm nowrap">Từ chối</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

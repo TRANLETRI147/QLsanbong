@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Lịch sân')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<main class="container-fluid py-3">
+    <div th:replace="~{fragments :: flash}"></div>
+
+    <!-- Chọn ngày -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/lich(ngay=${truoc})}">‹ Hôm trước</a>
+        <form method="get" th:action="@{/lich}" class="m-0">
+            <input type="date" name="ngay" class="form-control form-control-sm" th:value="${ngay}" onchange="this.form.submit()">
+        </form>
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/lich(ngay=${sau})}">Hôm sau ›</a>
+        <a class="btn btn-outline-success btn-sm" th:if="${ngay != homNay}" th:href="@{/lich}">Về hôm nay</a>
+        <a class="btn btn-success btn-sm ms-auto" th:href="@{/booking/new(ngay=${ngay})}">+ Đặt sân</a>
+    </div>
+
+    <div class="chu-thich mb-2">
+        <span><i style="background:#fff3cd"></i>Chờ chủ duyệt (vẫn giữ chỗ)</span>
+        <span><i style="background:#cfe2ff"></i>Đã duyệt</span>
+        <span><i style="background:#d1e7dd"></i>Đang đá</span>
+        <span><i style="background:#e2e3e5"></i>Hoàn tất</span>
+        <span><i style="background:repeating-linear-gradient(45deg,#f1f1f1,#f1f1f1 3px,#ccc 3px,#ccc 6px)"></i>Bị khóa (sân 7 ⇄ sân 5)</span>
+    </div>
+
+    <p class="text-muted" th:if="${#lists.isEmpty(lich.cacSan)}">
+        Chưa có sân nào.
+        <a th:if="${laChu}" th:href="@{/owner/san}">Thêm sân tại đây</a>
+        <span th:unless="${laChu}">Nhờ chủ sân thêm sân.</span>
+    </p>
+
+    <div class="lich-wrap" th:unless="${#lists.isEmpty(lich.cacSan)}">
+        <table class="table table-bordered lich">
+            <thead>
+            <tr>
+                <th class="cot-gio">Giờ</th>
+                <th th:each="san : ${lich.cacSan}" th:classappend="${san.san7} ? 'san-7'">
+                    <span th:text="${san.ten}">Sân</span><br>
+                    <span class="nho"><span th:replace="~{fragments :: tien(${san.giaMoiGio})}">0đ</span>/giờ</span>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="dong : ${lich.cacDong}" th:classappend="${dong.gioTron} ? 'gio-tron'">
+                <th class="cot-gio" th:text="${dong.gio}">19:00</th>
+                <th:block th:each="o : ${dong.cacO}">
+                    <!-- Ô trống: bấm để đặt sân -->
+                    <td th:if="${o.trong}" class="o-trong">
+                        <a th:href="@{/booking/new(sanId=${o.sanId},ngay=${ngay},gio=${dong.gio})}" title="Đặt sân giờ này">+</a>
+                    </td>
+                    <!-- Booking của chính sân này -->
+                    <td th:if="${o.cuaSan}" th:attr="rowspan=${o.rowspan}" th:classappend="'st-' + ${o.booking.status.name()}">
+                        <a class="o-booking" th:href="@{/booking/{id}(id=${o.booking.id})}">
+                            <strong th:text="${o.booking.customerName}">Tên khách</strong><br>
+                            <span class="nho" th:text="${o.booking.gioText}">19:00–20:00</span>
+                            <span th:replace="~{fragments :: trangThai(${o.booking.status})}">Trạng thái</span>
+                            <span class="badge text-bg-danger" th:if="${o.booking.dangPhucVu and o.booking.trangThaiThanhToan.name() != 'PAID'}">Chưa thu đủ</span>
+                        </a>
+                    </td>
+                    <!-- Ô bị khóa do sân liên quan đang được đặt -->
+                    <td th:if="${o.khoa}" th:attr="rowspan=${o.rowspan}" class="o-khoa">
+                        🔒 Bị khóa<br>
+                        <span th:each="kb : ${o.khoaBoi}">
+                            <a class="text-reset" th:href="@{/booking/{id}(id=${kb.id})}"
+                               th:text="${kb.sanBong.ten} + ' · ' + ${kb.customerName}">Sân · Khách</a><br>
+                        </span>
+                    </td>
+                </th:block>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Booking đã bị từ chối / hủy / không đến: nhân viên cần biết để báo lại khách -->
+    <div class="card card-body mt-3" th:if="${!#lists.isEmpty(daNhaCho)}">
+        <h2 class="h6">Booking đã bị từ chối / hủy / không đến trong ngày</h2>
+        <ul class="list-unstyled mb-0 small">
+            <li class="py-1" th:each="b : ${daNhaCho}">
+                <span th:replace="~{fragments :: trangThai(${b.status})}">Trạng thái</span>
+                <a th:href="@{/booking/{id}(id=${b.id})}"
+                   th:text="${b.customerName} + ' · ' + ${b.sanBong.ten} + ' · ' + ${b.gioText}">Khách</a>
+                <span class="text-muted" th:if="${b.reason != null}" th:text="'— ' + ${b.reason}"></span>
+            </li>
+        </ul>
+    </div>
+</main>
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Tổng quan')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<main class="container-fluid py-3">
+    <div th:replace="~{fragments :: flash}"></div>
+    <h1 class="h4 mb-3">Tổng quan</h1>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat">
+                <div class="small text-muted">Doanh thu hôm nay</div>
+                <div class="so text-success"><span th:replace="~{fragments :: tien(${tq.doanhThuHomNay})}">0đ</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat">
+                <div class="small text-muted">7 ngày gần nhất</div>
+                <div class="so"><span th:replace="~{fragments :: tien(${tq.doanhThu7Ngay})}">0đ</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat">
+                <div class="small text-muted">Tháng này</div>
+                <div class="so"><span th:replace="~{fragments :: tien(${tq.doanhThuThang})}">0đ</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat">
+                <div class="small text-muted">Booking hôm nay</div>
+                <div class="so" th:text="${tq.soBookingHomNay}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-warning d-flex justify-content-between align-items-center" th:if="${tq.soChoDuyet > 0}">
+        <span><strong th:text="${tq.soChoDuyet}">0</strong> booking đang chờ bạn duyệt.</span>
+        <a class="btn btn-warning btn-sm" th:href="@{/owner/cho-duyet}">Duyệt ngay</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-7">
+            <div class="card card-body mb-3">
+                <h2 class="h6">Doanh thu 7 ngày gần nhất (tiền thực thu)</h2>
+                <div style="position: relative; height: 240px"><canvas id="bieuDo"></canvas></div>
+            </div>
+
+            <div class="card card-body">
+                <h2 class="h6">Đã đá xong nhưng chưa thu đủ tiền (hôm nay)</h2>
+                <p class="text-muted small mb-0" th:if="${#lists.isEmpty(tq.chuaThuDu)}">Không có. Tốt!</p>
+                <ul class="list-unstyled mb-0" th:unless="${#lists.isEmpty(tq.chuaThuDu)}">
+                    <li class="py-2 border-top d-flex justify-content-between" th:each="b : ${tq.chuaThuDu}">
+                        <a th:href="@{/booking/{id}(id=${b.id})}" th:text="${b.customerName} + ' · ' + ${b.sanBong.ten} + ' · ' + ${b.gioText}">Khách</a>
+                        <span class="text-danger fw-bold nowrap">còn <span th:replace="~{fragments :: tien(${b.conLai})}">0đ</span></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+            <div class="card card-body mb-3">
+                <h2 class="h6">Thu tiền hôm nay theo nhân viên</h2>
+                <p class="text-muted small mb-0" th:if="${#maps.isEmpty(tq.thuTheoNhanVien)}">Chưa có khoản thu nào.</p>
+                <ul class="list-unstyled mb-0">
+                    <li class="d-flex justify-content-between py-1" th:each="e : ${tq.thuTheoNhanVien}">
+                        <span th:text="${e.key}">Nhân viên</span>
+                        <strong><span th:replace="~{fragments :: tien(${e.value})}">0đ</span></strong>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card card-body">
+                <h2 class="h6">Các lần thu hôm nay</h2>
+                <p class="text-muted small mb-0" th:if="${#lists.isEmpty(tq.thuHomNay)}">Chưa có.</p>
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2 border-top small" th:each="p : ${tq.thuHomNay}">
+                        <div class="d-flex justify-content-between">
+                            <a th:href="@{/booking/{id}(id=${p.booking.id})}" th:text="${p.booking.customerName} + ' · ' + ${p.booking.sanBong.ten}">Khách</a>
+                            <strong><span th:replace="~{fragments :: tien(${p.amount})}">0đ</span></strong>
+                        </div>
+                        <div class="text-muted"
+                             th:text="${#temporals.format(p.paidAt, 'HH:mm')} + ' · ' + ${p.method.nhan} + ' · ' + ${p.receivedBy.fullName}">giờ</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments :: scripts}"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    (function () {
+        var nhan = /*[[${tq.nhan7Ngay}]]*/ [];
+        var giaTri = /*[[${tq.giaTri7Ngay}]]*/ [];
+        var canvas = document.getElementById('bieuDo');
+        if (!canvas || typeof Chart === 'undefined') {
+            return;
+        }
+        new Chart(canvas, {
+            type: 'bar',
+            data: {labels: nhan, datasets: [{label: 'Doanh thu (đ)', data: giaTri, backgroundColor: '#198754'}]},
+            options: {
+                maintainAspectRatio: false,
+                plugins: {legend: {display: false}},
+                scales: {y: {beginAtZero: true, ticks: {callback: function (v) { return v.toLocaleString('vi-VN'); }}}}
+            }
+        });
+    })();
+</script>
+</body>
+</html>

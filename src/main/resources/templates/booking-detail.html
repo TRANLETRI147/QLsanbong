@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Chi tiết booking')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<main class="container py-3" style="max-width: 960px">
+    <div th:replace="~{fragments :: flash}"></div>
+
+    <!-- ===== Tiêu đề ===== -->
+    <a class="small" th:href="@{/lich(ngay=${ngayB})}">‹ Quay lại lịch ngày <span th:text="${b.ngayText}">01/01/2026</span></a>
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-1 mb-3">
+        <h1 class="h4 mb-0">Booking #<span th:text="${b.id}">1</span> · <span th:text="${b.sanBong.ten}">Sân</span></h1>
+        <span th:replace="~{fragments :: trangThai(${b.status})}">Trạng thái</span>
+        <span th:replace="~{fragments :: trangThai(${b.trangThaiThanhToan})}">Thanh toán</span>
+    </div>
+
+    <div class="row g-3">
+        <!-- ================= CỘT TRÁI: thông tin + thao tác + ghi chú ================= -->
+        <div class="col-12 col-lg-6">
+            <div class="card card-body mb-3">
+                <dl class="row mb-0">
+                    <dt class="col-4">Khách</dt>
+                    <dd class="col-8"><strong th:text="${b.customerName}">Tên</strong></dd>
+                    <dt class="col-4">Điện thoại</dt>
+                    <dd class="col-8">
+                        <a th:if="${b.customerPhone != null}" th:href="'tel:' + ${b.customerPhone}" th:text="${b.customerPhone}">090...</a>
+                        <span th:if="${b.customerPhone == null}" class="text-muted">Chưa có</span>
+                    </dd>
+                    <dt class="col-4">Giờ đá</dt>
+                    <dd class="col-8"><span th:text="${b.ngayText}">01/01/2026</span> · <strong th:text="${b.gioText}">19:00–20:00</strong>
+                        <span class="text-muted" th:text="'(' + ${b.soPhut} + ' phút)'"></span></dd>
+                    <dt class="col-4">Người tạo</dt>
+                    <dd class="col-8"><span th:text="${b.createdBy.fullName}">Tên</span>
+                        <span class="text-muted small" th:text="${#temporals.format(b.createdAt, 'dd/MM HH:mm')}"></span></dd>
+                    <dt class="col-4" th:if="${b.approvedBy != null}">Đã duyệt</dt>
+                    <dd class="col-8" th:if="${b.approvedBy != null}"><span th:text="${b.approvedBy.fullName}">Tên</span>
+                        <span class="text-muted small" th:text="${#temporals.format(b.approvedAt, 'dd/MM HH:mm')}"></span></dd>
+                    <dt class="col-4" th:if="${b.checkedInBy != null}">Check-in</dt>
+                    <dd class="col-8" th:if="${b.checkedInBy != null}"><span th:text="${b.checkedInBy.fullName}">Tên</span>
+                        <span class="text-muted small" th:text="${#temporals.format(b.checkedInAt, 'dd/MM HH:mm')}"></span></dd>
+                    <dt class="col-4" th:if="${b.reason != null}">Lý do</dt>
+                    <dd class="col-8" th:if="${b.reason != null}" th:text="${b.reason}">Lý do</dd>
+                </dl>
+            </div>
+
+            <!-- Thao tác chung (nhân viên + chủ) -->
+            <div class="card card-body mb-3" th:if="${b.status.name() == 'CONFIRMED'}">
+                <form th:action="@{/booking/{id}/check-in(id=${b.id})}" method="post" class="m-0">
+                    <button type="submit" class="btn btn-success w-100 btn-lg">✔ Check-in: khách đã tới sân</button>
+                </form>
+            </div>
+
+            <!-- Thao tác của chủ sân -->
+            <div class="card card-body mb-3 border border-warning" th:if="${laChu and b.choDuyet}">
+                <h2 class="h6">Booking đang chờ bạn duyệt</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <form th:action="@{/owner/booking/{id}/duyet(id=${b.id})}" method="post" class="m-0">
+                        <input type="hidden" name="quayLai" th:value="'/booking/' + ${b.id}">
+                        <button type="submit" class="btn btn-success">Duyệt</button>
+                    </form>
+                    <form th:action="@{/owner/booking/{id}/tu-choi(id=${b.id})}" method="post" class="m-0 d-flex gap-2"
+                          onsubmit="return confirm('Từ chối booking này? Sân sẽ được nhả.')">
+                        <input type="hidden" name="quayLai" th:value="'/booking/' + ${b.id}">
+                        <input type="text" name="lyDo" class="form-control form-control-sm" placeholder="Lý do (không bắt buộc)" maxlength="255">
+                        <button type="submit" class="btn btn-outline-danger">Từ chối</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card card-body mb-3" th:if="${laChu and b.chuaDienRa}">
+                <h2 class="h6">Chủ sân</h2>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#formDoiGio">Đổi sân / đổi giờ</button>
+                    <form th:if="${b.status.name() == 'CONFIRMED'}" th:action="@{/owner/booking/{id}/khong-den(id=${b.id})}" method="post"
+                          class="m-0" onsubmit="return confirm('Khách không đến? Sân sẽ được nhả.')">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Khách không đến</button>
+                    </form>
+                </div>
+                <form th:action="@{/owner/booking/{id}/huy(id=${b.id})}" method="post" class="d-flex gap-2"
+                      onsubmit="return confirm('Hủy booking này? Sân sẽ được nhả.')">
+                    <input type="text" name="lyDo" class="form-control form-control-sm" placeholder="Lý do hủy (không bắt buộc)" maxlength="255">
+                    <button type="submit" class="btn btn-outline-danger btn-sm nowrap">Hủy booking</button>
+                </form>
+
+                <div class="collapse mt-3" id="formDoiGio">
+                    <form th:action="@{/owner/booking/{id}/doi-gio(id=${b.id})}" method="post" class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label small mb-0" for="dgSan">Sân</label>
+                            <select class="form-select form-select-sm" id="dgSan" name="sanId">
+                                <option th:each="s : ${cacSan}" th:value="${s.id}" th:text="${s.ten}"
+                                        th:selected="${s.id == b.sanBong.id}">Sân</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-4">
+                            <label class="form-label small mb-0" for="dgNgay">Ngày</label>
+                            <input type="date" class="form-control form-control-sm" id="dgNgay" name="ngay" th:value="${ngayB}" required>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <label class="form-label small mb-0" for="dgTu">Từ</label>
+                            <select class="form-select form-select-sm" id="dgTu" name="batDau">
+                                <option th:each="g : ${mocBatDau}" th:value="${g}" th:text="${g}" th:selected="${g == batDauB}">18:00</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <label class="form-label small mb-0" for="dgDen">Đến</label>
+                            <select class="form-select form-select-sm" id="dgDen" name="ketThuc">
+                                <option th:each="g : ${mocKetThuc}" th:value="${g}" th:text="${g}" th:selected="${g == ketThucB}">19:00</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-sm">Lưu lịch mới</button>
+                            <span class="small text-muted">Tiền sân sẽ tính lại theo giá hiện hành của sân.</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Ghi chú -->
+            <div class="card card-body">
+                <h2 class="h6">Ghi chú &amp; nhật ký</h2>
+                <form th:action="@{/booking/{id}/ghi-chu(id=${b.id})}" method="post" class="mb-3">
+                    <textarea name="noiDung" class="form-control mb-2" rows="2" maxlength="1000" required
+                              placeholder="Yêu cầu của khách: đổi giờ, đá bù, đặt nước/đồ tập, ghi chú thanh toán..."></textarea>
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <button type="submit" class="btn btn-success btn-sm">Thêm ghi chú</button>
+                        <div class="form-check mb-0" th:unless="${laChu}">
+                            <input class="form-check-input" type="checkbox" name="baoChu" value="true" id="baoChu">
+                            <label class="form-check-label small" for="baoChu">Báo cho chủ sân (🔔)</label>
+                        </div>
+                    </div>
+                </form>
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2 border-top" th:each="n : ${b.notes}">
+                        <div class="small">
+                            <strong th:text="${n.author.fullName}">Tên</strong>
+                            <span class="text-muted" th:text="${#temporals.format(n.createdAt, 'dd/MM HH:mm')}">01/01 10:00</span>
+                            <span class="badge text-bg-light" th:if="${n.heThong}">hệ thống</span>
+                        </div>
+                        <div th:classappend="${n.heThong} ? 'text-muted small'" th:text="${n.content}">Nội dung</div>
+                    </li>
+                    <li class="text-muted small" th:if="${#lists.isEmpty(b.notes)}">Chưa có ghi chú nào.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ================= CỘT PHẢI: tiền ================= -->
+        <div class="col-12 col-lg-6">
+            <div class="card card-body mb-3">
+                <h2 class="h6">Tính tiền</h2>
+                <table class="table table-sm mb-2">
+                    <tbody>
+                    <tr>
+                        <td>Tiền sân (<span th:text="${b.soPhut}">60</span> phút)</td>
+                        <td class="text-end"><span th:replace="~{fragments :: tien(${b.courtFee})}">0đ</span></td>
+                        <td></td>
+                    </tr>
+                    <tr th:each="i : ${b.items}">
+                        <td>
+                            <span th:text="${i.name}">Nước</span>
+                            <span class="text-muted small"
+                                  th:text="'x' + ${i.quantity} + ' · ' + ${#numbers.formatDecimal(i.unitPrice, 1, 'POINT', 0, 'COMMA')} + 'đ'">x1</span>
+                        </td>
+                        <td class="text-end"><span th:replace="~{fragments :: tien(${i.thanhTien})}">0đ</span></td>
+                        <td class="text-end">
+                            <form th:if="${b.dangPhucVu}" th:action="@{/booking/{id}/mon/{itemId}/xoa(id=${b.id},itemId=${i.id})}"
+                                  method="post" class="m-0" onsubmit="return confirm('Xóa dịch vụ này?')">
+                                <button type="submit" class="btn btn-link btn-sm text-danger p-0" title="Xóa">✕</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${b.discount.signum() > 0}">
+                        <td>Giảm giá</td>
+                        <td class="text-end">-<span th:replace="~{fragments :: tien(${b.discount})}">0đ</span></td>
+                        <td></td>
+                    </tr>
+                    <tr class="fw-bold border-top">
+                        <td>Tổng cần thu</td>
+                        <td class="text-end"><span th:replace="~{fragments :: tien(${b.tongTien})}">0đ</span></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Đã thu</td>
+                        <td class="text-end"><span th:replace="~{fragments :: tien(${b.daThu})}">0đ</span></td>
+                        <td></td>
+                    </tr>
+                    <tr class="fw-bold">
+                        <td>Còn lại</td>
+                        <td class="text-end fs-5" th:classappend="${b.conLai.signum() > 0} ? 'text-danger' : 'text-success'">
+                            <span th:replace="~{fragments :: tien(${b.conLai})}">0đ</span></td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <!-- Thêm dịch vụ -->
+                <form th:if="${b.dangPhucVu}" th:action="@{/booking/{id}/mon(id=${b.id})}" method="post" class="row g-2 mb-3">
+                    <div class="col-12"><span class="small text-muted">Thêm dịch vụ / đồ dùng (nước, thuê áo bib...)</span></div>
+                    <div class="col-12 col-sm-5">
+                        <input type="text" name="ten" class="form-control form-control-sm" placeholder="Tên" maxlength="100" required list="goiY">
+                        <datalist id="goiY">
+                            <option value="Nước suối"></option>
+                            <option value="Nước ngọt"></option>
+                            <option value="Nước tăng lực"></option>
+                            <option value="Thuê áo bib"></option>
+                            <option value="Thuê giày"></option>
+                            <option value="Thuê bóng"></option>
+                        </datalist>
+                    </div>
+                    <div class="col-4 col-sm-2">
+                        <input type="number" name="soLuong" class="form-control form-control-sm" value="1" min="1" max="99" required>
+                    </div>
+                    <div class="col-8 col-sm-3">
+                        <input type="text" inputmode="numeric" name="donGia" class="form-control form-control-sm" placeholder="Đơn giá" required>
+                    </div>
+                    <div class="col-12 col-sm-2">
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100">Thêm</button>
+                    </div>
+                </form>
+
+                <!-- Giảm giá: chỉ chủ sân -->
+                <form th:if="${laChu and (b.chuaDienRa or b.status.name() == 'CHECKED_IN')}"
+                      th:action="@{/owner/booking/{id}/giam-gia(id=${b.id})}" method="post" class="row g-2 mb-3">
+                    <div class="col-12"><span class="small text-muted">Giảm giá (chỉ chủ sân)</span></div>
+                    <div class="col-8">
+                        <input type="text" inputmode="numeric" name="soTien" class="form-control form-control-sm"
+                               th:value="${b.discount}" required>
+                    </div>
+                    <div class="col-4"><button type="submit" class="btn btn-outline-primary btn-sm w-100">Lưu</button></div>
+                </form>
+
+                <!-- NÚT THU TIỀN: nhân viên bấm để báo lên chủ sân -->
+                <div th:if="${b.dangPhucVu and b.conLai.signum() > 0}" class="border rounded p-2 bg-success-subtle">
+                    <form th:action="@{/booking/{id}/thu-tien(id=${b.id})}" method="post" class="row g-2">
+                        <div class="col-12"><strong>Thu tiền</strong> <span class="small text-muted">— bấm xong chủ sân nhận thông báo ngay</span></div>
+                        <div class="col-12 col-sm-5">
+                            <input type="text" inputmode="numeric" name="soTien" class="form-control"
+                                   th:value="${b.conLai}" required aria-label="Số tiền thu">
+                        </div>
+                        <div class="col-12 col-sm-4">
+                            <select name="hinhThuc" class="form-select" aria-label="Hình thức">
+                                <option th:each="h : ${hinhThuc}" th:value="${h.name()}" th:text="${h.nhan}">Tiền mặt</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-3">
+                            <button type="submit" class="btn btn-success w-100">Đã thu tiền</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="alert alert-success py-2 mb-0 small" th:if="${b.status.name() == 'CONFIRMED' and b.conLai.signum() == 0}">
+                    Đã thu đủ. Bấm <strong>Check-in</strong> khi khách tới sân để hoàn tất booking.
+                </div>
+                <div class="alert alert-success py-2 mb-0 small" th:if="${b.status.name() == 'COMPLETED'}">
+                    ✔ Đã tính tiền xong, booking hoàn tất.
+                </div>
+            </div>
+
+            <!-- Phiếu thu -->
+            <div class="card card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="h6 mb-2">Phiếu thu</h2>
+                    <a class="btn btn-outline-secondary btn-sm" th:if="${!#lists.isEmpty(b.payments)}"
+                       th:href="@{/booking/{id}/hoa-don(id=${b.id})}" target="_blank">🧾 Xem / in hóa đơn</a>
+                </div>
+                <p class="text-muted small mb-0" th:if="${#lists.isEmpty(b.payments)}">Chưa thu khoản nào.</p>
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2 border-top d-flex justify-content-between align-items-start gap-2" th:each="p : ${b.payments}">
+                        <div th:classappend="${p.voided} ? 'text-decoration-line-through text-muted'">
+                            <strong><span th:replace="~{fragments :: tien(${p.amount})}">0đ</span></strong>
+                            <span th:text="'· ' + ${p.method.nhan}">Tiền mặt</span><br>
+                            <span class="small text-muted"
+                                  th:text="${#temporals.format(p.paidAt, 'dd/MM HH:mm')} + ' · ' + ${p.receivedBy.fullName}">thời gian</span>
+                            <span class="badge text-bg-secondary" th:if="${p.voided}">đã hủy</span>
+                        </div>
+                        <form th:if="${laChu and !p.voided}" th:action="@{/owner/booking/{id}/phieu-thu/{pid}/huy(id=${b.id},pid=${p.id})}"
+                              method="post" class="m-0" onsubmit="return confirm('Hủy phiếu thu này (nhập nhầm)?')">
+                            <button type="submit" class="btn btn-outline-danger btn-sm nowrap">Hủy phiếu</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments :: scripts}"></div>
+</body>
+</html>

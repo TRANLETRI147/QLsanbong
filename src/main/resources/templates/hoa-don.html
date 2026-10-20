@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Hóa đơn')}"></head>
+<body>
+<div class="hoa-don shadow-sm">
+    <div class="text-center mb-3">
+        <h1 class="h5 mb-0">HÓA ĐƠN THANH TOÁN SÂN BÓNG</h1>
+        <div class="small text-muted">Booking #<span th:text="${b.id}">1</span> · in lúc
+            <span th:text="${#temporals.format(bayGio, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</span></div>
+    </div>
+    <table class="table table-sm table-borderless mb-2">
+        <tr><td>Khách</td><td class="text-end" th:text="${b.customerName}">Tên</td></tr>
+        <tr><td>Sân</td><td class="text-end" th:text="${b.sanBong.ten}">Sân</td></tr>
+        <tr><td>Thời gian</td><td class="text-end"><span th:text="${b.ngayText}">01/01/2026</span> <span th:text="${b.gioText}">19:00–20:00</span></td></tr>
+    </table>
+    <table class="table table-sm mb-2">
+        <thead><tr><th>Khoản</th><th class="text-end">Thành tiền</th></tr></thead>
+        <tbody>
+        <tr><td>Tiền sân (<span th:text="${b.soPhut}">60</span> phút)</td>
+            <td class="text-end"><span th:replace="~{fragments :: tien(${b.courtFee})}">0đ</span></td></tr>
+        <tr th:each="i : ${b.items}">
+            <td th:text="${i.name} + ' x' + ${i.quantity}">Nước x1</td>
+            <td class="text-end"><span th:replace="~{fragments :: tien(${i.thanhTien})}">0đ</span></td>
+        </tr>
+        <tr th:if="${b.discount.signum() > 0}">
+            <td>Giảm giá</td>
+            <td class="text-end">-<span th:replace="~{fragments :: tien(${b.discount})}">0đ</span></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr class="fw-bold"><td>Tổng cộng</td><td class="text-end"><span th:replace="~{fragments :: tien(${b.tongTien})}">0đ</span></td></tr>
+        <tr><td>Đã thu</td><td class="text-end"><span th:replace="~{fragments :: tien(${b.daThu})}">0đ</span></td></tr>
+        <tr class="fw-bold"><td>Còn lại</td><td class="text-end"><span th:replace="~{fragments :: tien(${b.conLai})}">0đ</span></td></tr>
+        </tfoot>
+    </table>
+
+    <div class="small" th:if="${!#lists.isEmpty(b.payments)}">
+        <div class="fw-bold">Các lần thu:</div>
+        <div th:each="p : ${b.payments}" th:unless="${p.voided}">
+            <span th:text="${#temporals.format(p.paidAt, 'dd/MM HH:mm')}">01/01 10:00</span> ·
+            <span th:replace="~{fragments :: tien(${p.amount})}">0đ</span> ·
+            <span th:text="${p.method.nhan}">Tiền mặt</span> ·
+            <span th:text="${p.receivedBy.fullName}">Nhân viên</span>
+        </div>
+    </div>
+
+    <div class="text-center mt-3 fw-bold" th:if="${b.trangThaiThanhToan.name() == 'PAID'}">✔ ĐÃ THANH TOÁN ĐỦ</div>
+    <div class="text-center mt-3 fw-bold text-danger" th:unless="${b.trangThaiThanhToan.name() == 'PAID'}">CHƯA THANH TOÁN ĐỦ</div>
+    <div class="text-center text-muted small mt-2">Cảm ơn quý khách!</div>
+
+    <div class="d-flex gap-2 justify-content-center mt-3 khong-in">
+        <button type="button" class="btn btn-success" onclick="window.print()">🖨 In hóa đơn</button>
+        <a class="btn btn-outline-secondary" th:href="@{/booking/{id}(id=${b.id})}">Quay lại</a>
+    </div>
+</div>
+</body>
+</html>
