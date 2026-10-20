@@ -28,7 +28,7 @@ public class SanBong {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ten_san", nullable = false, length = 100)
+    @Column(name = "ten", nullable = false, length = 100)
     private String ten;
 
     @Enumerated(EnumType.STRING)
