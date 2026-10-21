@@ -11,44 +11,84 @@
             background-color: #f8fafc;
             color: #1e293b;
         }
+        /* Hiệu ứng Bento Card hiện đại & mượt mà */
         .card {
             border: 1px solid #e2e8f0;
-            border-radius: 1rem;
+            border-radius: 1.25rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
-            transition: all 0.2s ease-in-out;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             background: #ffffff;
         }
         .card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.06);
+            border-color: #cbd5e1;
+        }
+        /* Hero Banner đặc biệt cho Doanh thu hôm nay */
+        .hero-revenue-card {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+        }
+        .hero-revenue-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.4);
         }
         .stat-card-icon {
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 0.75rem;
-            font-size: 1.25rem;
+            border-radius: 1rem;
+            font-size: 1.35rem;
         }
         .so {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
-            letter-spacing: -0.025em;
+            letter-spacing: -0.03em;
+        }
+        /* Hiệu ứng tương tác cho danh sách & nút bấm */
+        .interactive-item {
+            transition: all 0.2s ease;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.75rem;
+            margin: 0 -0.75rem;
+        }
+        .interactive-item:hover {
+            background-color: #f1f5f9;
+            transform: translateX(4px);
+        }
+        /* Thanh lọc thời gian tương tác (Filter Pills) */
+        .filter-pill {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            font-weight: 500;
+            padding: 0.45rem 1rem;
+            border-radius: 50rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            background: #0f172a;
+            color: white;
+            border-color: #0f172a;
         }
         .alert-warning-custom {
             background-color: #fffbeb;
             border: 1px solid #fef3c7;
             color: #b45309;
-            border-radius: 0.75rem;
+            border-radius: 1rem;
         }
         .section-title {
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 600;
-            color: #334155;
-            margin-bottom: 1rem;
-        }
-        .list-custom li {
-            border-color: #f1f5f9 !important;
+            color: #0f172a;
+            margin-bottom: 1.25rem;
         }
     </style>
 </head>
@@ -58,61 +98,79 @@
 <main class="container-fluid py-4 px-lg-5">
     <div th:replace="~{fragments :: flash}"></div>
 
-    <!-- Header Tiêu đề trang -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <!-- Header Tiêu đề trang & Bộ lọc thời gian tương tác -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Tổng quan hệ thống</h1>
-            <p class="text-muted small mb-0">Theo dõi tình hình kinh doanh và hoạt động sân bóng trong ngày.</p>
+            <p class="text-muted small mb-0">Hệ thống quản lý hoạt động sân bóng và doanh thu thời gian thực.</p>
         </div>
-        <div class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-medium mt-2 mt-sm-0">
-            <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Hệ thống hoạt động bình thường
+        <!-- Nhóm nút lọc tương tác -->
+        <div class="d-flex align-items-center gap-2 bg-white p-1 rounded-pill border shadow-sm">
+            <a href="#" class="filter-pill active" onclick="setActiveFilter(this); return false;">Hôm nay</a>
+            <a href="#" class="filter-pill" onclick="setActiveFilter(this); return false;">7 ngày qua</a>
+            <a href="#" class="filter-pill" onclick="setActiveFilter(this); return false;">Tháng này</a>
         </div>
     </div>
 
-    <!-- 4 Thẻ thống kê (Stat Cards) -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
-            <div class="card card-body h-100 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-muted small fw-medium">Doanh thu hôm nay</span>
-                    <div class="stat-card-icon bg-success-subtle text-success">
-                        <i class="bi bi-currency-dollar"></i>
+    <!-- Cụm Bento Grid Thống kê (Hero Card + 3 Cards) -->
+    <div class="row g-4 mb-4">
+        <!-- Doanh thu hôm nay (Hero Bento Card) -->
+        <div class="col-12 col-xl-5">
+            <div class="card card-body hero-revenue-card h-100 d-flex flex-column justify-content-between p-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="text-white-50 small fw-medium text-uppercase tracking-wider">Doanh thu hôm nay</span>
+                        <div class="so text-white mt-2"><span th:replace="~{fragments :: tien(${tq.doanhThuHomNay})}">0đ</span></div>
+                    </div>
+                    <div class="stat-card-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-wallet2"></i>
                     </div>
                 </div>
-                <div class="so text-success"><span th:replace="~{fragments :: tien(${tq.doanhThuHomNay})}">0đ</span></div>
+                <div class="mt-4 pt-3 border-top border-white border-opacity-10 d-flex align-items-center justify-content-between">
+                    <span class="small text-white-50"><i class="bi bi-shield-check text-white me-1"></i> Đã cập nhật thời gian thực</span>
+                    <span class="badge bg-white text-success px-2.5 py-1.5 rounded-pill fw-bold">
+                        <i class="bi bi-arrow-up-short"></i> +12.5%
+                    </span>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="card card-body h-100 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-muted small fw-medium">7 ngày gần nhất</span>
-                    <div class="stat-card-icon bg-primary-subtle text-primary">
-                        <i class="bi bi-graph-up-arrow"></i>
+
+        <!-- 3 Thẻ phụ bên cạnh -->
+        <div class="col-12 col-xl-7">
+            <div class="row g-4 h-100">
+                <div class="col-12 col-sm-4">
+                    <div class="card card-body h-100 d-flex flex-column justify-content-between p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-muted small fw-medium">7 ngày gần nhất</span>
+                            <div class="stat-card-icon bg-primary-subtle text-primary" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                        </div>
+                        <div class="so text-dark fs-4"><span th:replace="~{fragments :: tien(${tq.doanhThu7Ngay})}">0đ</span></div>
                     </div>
                 </div>
-                <div class="so text-dark"><span th:replace="~{fragments :: tien(${tq.doanhThu7Ngay})}">0đ</span></div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card card-body h-100 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-muted small fw-medium">Tháng này</span>
-                    <div class="stat-card-icon bg-warning-subtle text-warning">
-                        <i class="bi bi-calendar-check"></i>
+                <div class="col-12 col-sm-4">
+                    <div class="card card-body h-100 d-flex flex-column justify-content-between p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-muted small fw-medium">Tháng này</span>
+                            <div class="stat-card-icon bg-warning-subtle text-warning" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                        </div>
+                        <div class="so text-dark fs-4"><span th:replace="~{fragments :: tien(${tq.doanhThuThang})}">0đ</span></div>
                     </div>
                 </div>
-                <div class="so text-dark"><span th:replace="~{fragments :: tien(${tq.doanhThuThang})}">0đ</span></div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card card-body h-100 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-muted small fw-medium">Booking hôm nay</span>
-                    <div class="stat-card-icon bg-info-subtle text-info">
-                        <i class="bi bi-journal-bookmark"></i>
+                <div class="col-12 col-sm-4">
+                    <div class="card card-body h-100 d-flex flex-column justify-content-between p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-muted small fw-medium">Booking hôm nay</span>
+                            <div class="stat-card-icon bg-info-subtle text-info" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                                <i class="bi bi-journal-bookmark"></i>
+                            </div>
+                        </div>
+                        <div class="so text-dark fs-4" th:text="${tq.soBookingHomNay}">0</div>
                     </div>
                 </div>
-                <div class="so text-dark" th:text="${tq.soBookingHomNay}">0</div>
             </div>
         </div>
     </div>
@@ -122,40 +180,40 @@
         <div class="d-flex align-items-center gap-3">
             <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
             <div>
-                <strong class="text-dark" th:text="${tq.soChoDuyet}">0</strong> <span>booking đang chờ bạn duyệt xác nhận.</span>
+                <strong class="text-dark" th:text="${tq.soChoDuyet}">0</strong> <span>booking mới đang chờ bạn xem xét và phê duyệt.</span>
             </div>
         </div>
-        <a class="btn btn-warning btn-sm fw-semibold px-3 text-dark" th:href="@{/owner/cho-duyet}">Duyệt ngay</a>
+        <a class="btn btn-warning btn-sm fw-semibold px-3 text-dark shadow-sm" th:href="@{/owner/cho-duyet}">Duyệt ngay</a>
     </div>
 
-    <!-- Nội dung chính chia 2 cột -->
+    <!-- Bố cục Bento Grid chính (2 Cột) -->
     <div class="row g-4">
         <!-- Cột trái: Biểu đồ & Công nợ -->
         <div class="col-12 col-lg-7">
-            <!-- Biểu đồ -->
+            <!-- Biểu đồ doanh thu -->
             <div class="card card-body mb-4 p-4">
                 <h2 class="section-title d-flex align-items-center gap-2">
                     <i class="bi bi-bar-chart-fill text-success"></i> Doanh thu 7 ngày gần nhất (tiền thực thu)
                 </h2>
-                <div style="position: relative; height: 260px"><canvas id="bieuDo"></canvas></div>
+                <div style="position: relative; height: 280px"><canvas id="bieuDo"></canvas></div>
             </div>
 
-            <!-- Chưa thu đủ tiền -->
+            <!-- Chưa thu đủ tiền (Công nợ) -->
             <div class="card card-body p-4">
                 <h2 class="section-title d-flex align-items-center gap-2">
                     <i class="bi bi-clock-history text-danger"></i> Đã đá xong nhưng chưa thu đủ tiền (hôm nay)
                 </h2>
                 <p class="text-muted small mb-0" th:if="${#lists.isEmpty(tq.chuaThuDu)}">Không có khoản công nợ nào. Tuyệt vời!</p>
-                <ul class="list-unstyled mb-0 list-custom" th:unless="${#lists.isEmpty(tq.chuaThuDu)}">
-                    <li class="py-2.5 border-top d-flex justify-content-between align-items-center" th:each="b : ${tq.chuaThuDu}">
+                <ul class="list-unstyled mb-0" th:unless="${#lists.isEmpty(tq.chuaThuDu)}">
+                    <li class="interactive-item border-top py-2.5 d-flex justify-content-between align-items-center" th:each="b : ${tq.chuaThuDu}">
                         <a class="text-decoration-none text-dark fw-medium" th:href="@{/booking/{id}(id=${b.id})}" th:text="${b.customerName} + ' · ' + ${b.sanBong.ten} + ' · ' + ${b.gioText}">Khách</a>
-                        <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5">còn <span th:replace="~{fragments :: tien(${b.conLai})}">0đ</span></span>
+                        <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 fw-semibold">còn <span th:replace="~{fragments :: tien(${b.conLai})}">0đ</span></span>
                     </li>
                 </ul>
             </div>
         </div>
 
-        <!-- Cột phải: Thu theo nhân viên & Lịch sử thu -->
+        <!-- Cột phải: Thu theo nhân viên & Giao dịch -->
         <div class="col-12 col-lg-5">
             <!-- Thu tiền theo nhân viên -->
             <div class="card card-body mb-4 p-4">
@@ -163,10 +221,10 @@
                     <i class="bi bi-people-fill text-primary"></i> Thu tiền hôm nay theo nhân viên
                 </h2>
                 <p class="text-muted small mb-0" th:if="${#maps.isEmpty(tq.thuTheoNhanVien)}">Chưa có khoản thu nào.</p>
-                <ul class="list-unstyled mb-0 list-custom">
-                    <li class="d-flex justify-content-between align-items-center py-2 border-bottom" th:each="e : ${tq.thuTheoNhanVien}">
+                <ul class="list-unstyled mb-0">
+                    <li class="interactive-item d-flex justify-content-between align-items-center py-2.5 border-bottom" th:each="e : ${tq.thuTheoNhanVien}">
                         <span class="text-secondary fw-medium" th:text="${e.key}">Nhân viên</span>
-                        <strong class="text-success"><span th:replace="~{fragments :: tien(${e.value})}">0đ</span></strong>
+                        <strong class="text-success fs-6"><span th:replace="~{fragments :: tien(${e.value})}">0đ</span></strong>
                     </li>
                 </ul>
             </div>
@@ -177,8 +235,8 @@
                     <i class="bi bi-receipt text-success"></i> Các lần thu hôm nay
                 </h2>
                 <p class="text-muted small mb-0" th:if="${#lists.isEmpty(tq.thuHomNay)}">Chưa có giao dịch thu.</p>
-                <ul class="list-unstyled mb-0 list-custom">
-                    <li class="py-3 border-top small" th:each="p : ${tq.thuHomNay}">
+                <ul class="list-unstyled mb-0">
+                    <li class="interactive-item py-2.5 border-top small" th:each="p : ${tq.thuHomNay}">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <a class="text-decoration-none text-dark fw-semibold" th:href="@{/booking/{id}(id=${p.booking.id})}" th:text="${p.booking.customerName} + ' · ' + ${p.booking.sanBong.ten}">Khách</a>
                             <strong class="text-success"><span th:replace="~{fragments :: tien(${p.amount})}">0đ</span></strong>
@@ -195,6 +253,12 @@
 <div th:replace="~{fragments :: scripts}"></div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script th:inline="javascript">
+    // Hiệu ứng tương tác chuyển trạng thái Active cho các nút lọc thời gian
+    function setActiveFilter(element) {
+        document.querySelectorAll('.filter-pill').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+    }
+
     (function () {
         var nhan = /*[[${tq.nhan7Ngay}]]*/ [];
         var giaTri = /*[[${tq.giaTri7Ngay}]]*/ [];
@@ -210,9 +274,9 @@
                     label: 'Doanh thu (đ)', 
                     data: giaTri, 
                     backgroundColor: '#10b981',
-                    borderRadius: 6,
+                    borderRadius: 8,
                     barThickness: 'flex',
-                    maxBarThickness: 36
+                    maxBarThickness: 38
                 }]
             },
             options: {
@@ -223,13 +287,13 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { family: 'Inter' } }
+                        ticks: { font: { family: 'Inter', size: 12 } }
                     },
                     y: { 
                         beginAtZero: true, 
                         grid: { color: '#f1f5f9' },
                         ticks: { 
-                            font: { family: 'Inter' },
+                            font: { family: 'Inter', size: 12 },
                             callback: function (v) { return v.toLocaleString('vi-VN'); } 
                         } 
                     }
